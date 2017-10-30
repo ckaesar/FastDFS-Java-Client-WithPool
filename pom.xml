@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.fastdfs</groupId>
-  <artifactId>fastdfs-client</artifactId>
+  <artifactId>FastDFS-Java-Client-WithPool</artifactId>
   <version>0.0.1</version>
   <packaging>jar</packaging>
 
-  <name>fastdfs-client</name>
+  <name>FastDFS-Java-Client-WithPool</name>
   <description>FastDFS Client</description>
   <url>https://github.com/luhuiguo/fastdfs-client</url>
 

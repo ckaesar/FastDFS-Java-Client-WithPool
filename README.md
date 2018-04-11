@@ -39,3 +39,6 @@ FASTADDR=http://10.10.2.118/
 ## java代码引用
 @Autowired <br>
 private FastDFSClient fastDFSClient;
+
+## 备注
+1.文件传输时间过长时会导致超时，通过设置 PooledConnectionFactory.soTimeout 时间，解决此问题

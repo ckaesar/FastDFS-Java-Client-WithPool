@@ -13,17 +13,18 @@ public class TestFdfs {
 	
 	@Test
 	public void testInit() throws IOException {
-		File file = new File("C:\\Users\\admin\\Pictures\\test_pic2.jpg");
+		File file = new File("C:\\Users\\admin\\Pictures\\保险代理系统需求说明书v1.1.docx");
 		FileInputStream fis = null;
 		fis = new FileInputStream(file);
 		
 		byte[] file_buff = new byte[(int) file.length()];
 		fis.read(file_buff);
 		String trackerList = "10.10.2.118:22122";
-		String fastdfs_file_type = "jpg";
-		FastDFSClient client = new FastDFSClient(trackerList, fastdfs_file_type);
+		String pic_file_type = "doc,docx,pdf,jpg,png";
+		String video_file_type = "mp4,mov,3gp,avi,wmv";
+		FastDFSClient client = new FastDFSClient(trackerList, pic_file_type, 10, video_file_type, 50);
 		
-		ResultInfo resultInfo = client.uploadFile(file_buff, "testZip.jpg");
+		ResultInfo resultInfo = client.uploadFile(file_buff, "保险代理系统需求说明书v1.1.docx");
 		System.out.println(resultInfo.getMsg());
 	}
 	

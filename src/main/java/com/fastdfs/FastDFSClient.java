@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +29,15 @@ public class FastDFSClient {
     ConnectionManager cm = null;
     FastFileStorageClient storageClient = null;
 		
-	public FastDFSClient(String trackerList, String fastdfs_file_type) {
+	public FastDFSClient(String trackerList, String pic_file_type, int pic_limited_size, String video_file_type, int video_limited_size) {
 		try {
-			String[] fileTypeArray = fastdfs_file_type.split(",");
-			ClientUtil.fileTypes = Arrays.asList(fileTypeArray);
+			String[] picTypeArray = pic_file_type.split(",");
+			ClientUtil.picFileTypes = Arrays.asList(picTypeArray);
+			ClientUtil.picLimitedSize = pic_limited_size;
+			
+			String[] videoTypeArray = video_file_type.split(",");
+			ClientUtil.videoFileTypes = Arrays.asList(videoTypeArray);
+			ClientUtil.videoLimitedSize = video_limited_size;
 			
 			String[] trackerStrings = trackerList.split(",");
 			trackers = Arrays.asList(trackerStrings);
@@ -50,26 +56,53 @@ public class FastDFSClient {
 	 * @param file_buff 文件内容
 	 * @param fileName 文件名，例如："test.jpg"
 	 * @return 返回ResultInfo，当flag为true时表示文件上传成功，msg为文件id，例如："group1/M00/00/00/CgoCd1mtEeOACdAcAAMddT8sm7I383.png"
+	 * 			；当flag为false时表示文件上传失败，msg为失败原因
 	 */
 	public ResultInfo uploadFile(byte[] file_buff, String fileName) {
 		ResultInfo resultInfo = new ResultInfo();
 		resultInfo.setFlag(false);
+		
+		//获取文件头、文件类型
+		String fileCode = FileType.bytesToHexString(file_buff);
+		String fileType = null; 
+		if(fileCode == null) {
+			resultInfo.setMsg("文件头为空，文件类型不符合规则");
+			return resultInfo;
+		} else {
+			fileType = FileType.getFileTypeByFileCode(fileCode);
+		}
+		
 		if(file_buff == null || file_buff.length == 0 || fileName == null){
 			resultInfo.setMsg("文件内容或文件名称不能为空");
 			return resultInfo;
-		}else{
-			String[] fileNameArr = ClientUtil.splitFileName(fileName);
-			if(fileNameArr.length == 1 || fileNameArr[1] == null){
-				resultInfo.setMsg("文件扩展名不能为空");
+		} else {
+//			String[] fileNameArr = ClientUtil.splitFileName(fileName); //根据文件头判断文件的真实类型
+			if(StringUtils.isBlank(fileType)){
+				resultInfo.setMsg("文件扩展名不能为空！");
 				return resultInfo;
 			}else{
-				if(!ClientUtil.fileTypes.contains(fileNameArr[1])){
-					resultInfo.setMsg("\"" + fileNameArr[1] + "\"" + "，禁止上传该类型的文件 ");
-					return resultInfo;
-				}else{
-					StorePath storePath = storageClient.uploadFile(file_buff, fileNameArr[1]);
-					resultInfo.setMsg(storePath.getFullPath());
-					resultInfo.setFlag(true);
+				if(ClientUtil.picFileTypes.contains(fileType)){
+					if(file_buff.length > ClientUtil.picLimitedSize * 1024 * 1024) {
+						resultInfo.setMsg("\"" + fileType + "\"" + ", 该类型最大可上传" + ClientUtil.picLimitedSize + "M" + "的文件");
+						return resultInfo;
+					} else {
+						StorePath storePath = storageClient.uploadFile(file_buff, fileType);
+						resultInfo.setMsg(storePath.getFullPath());
+						resultInfo.setFlag(true);
+						return resultInfo;
+					}
+				} else if(ClientUtil.videoFileTypes.contains(fileType)){
+					if(file_buff.length > ClientUtil.videoLimitedSize * 1024 * 1024) {
+						resultInfo.setMsg("\"" + fileType + "\"" + ", 该类型最大可上传" + ClientUtil.videoLimitedSize + "M" + "的文件");
+						return resultInfo;
+					} else {
+						StorePath storePath = storageClient.uploadFile(file_buff, fileType);
+						resultInfo.setMsg(storePath.getFullPath());
+						resultInfo.setFlag(true);
+						return resultInfo;
+					}
+				} else {
+					resultInfo.setMsg("\"" + fileType + "\"" + "，禁止上传该类型的文件 ");
 					return resultInfo;
 				}
 			}
